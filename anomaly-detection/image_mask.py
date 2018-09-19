@@ -1,27 +1,37 @@
-from __future__ import print_function
 from PIL import Image,ImageDraw
 import matplotlib.pyplot as plt
+import numpy as np
 
 
-im = Image.open("NLM-MontgomeryCXRSet\\MontgomerySet\\CXR_png\\MCUCXR_0001_0.png").convert("RGBA")
-leftMask = Image.open("NLM-MontgomeryCXRSet\\MontgomerySet\\ManualMask\\leftMask\\MCUCXR_0001_0.png").convert("L")
-rightMask = Image.open("NLM-MontgomeryCXRSet\\MontgomerySet\\ManualMask\\rightMask\\MCUCXR_0001_0.png").convert("L")
-           
-background=Image.new('L', im.size, color=0)
-background.paste(leftMask, (0, 0),leftMask)
-background.paste(rightMask, (0, 0),rightMask)
+picName = "MCUCXR_0001_0.png"
+ktPath = "NLM-MontgomeryCXRSet\\MontgomerySet\\CXR_png\\"
+masksPath = "NLM-MontgomeryCXRSet\\MontgomerySet\\ManualMask\\"
 
-background = background.convert("RGBA")
+#Создание объектов изображений томографии и масок
+leftMask = Image.open(masksPath+"leftMask\\"+picName).convert("RGBA")
+rightMask = Image.open(masksPath+"rightMask\\"+picName).convert("RGBA")
+ktPic = Image.open(ktPath+picName).convert("RGB")
 
-draw = ImageDraw.Draw(background)
-pix = background.load()
-for i in range(im.size[0]):
-    for j in range(im.size[1]):
-        if pix[i,j][0] == 255:
-            draw.point((i,j),(255,0,0,127))
+#Перевод масок в трёхмерный массив numpy
+leftMaskArr = np.array(leftMask)
+rightMaskArr = np.array(rightMask)
 
-im.paste(background,(0, 0), background)
+#Выделение белых областей масок в булиновском массиве
+doubleMaskBool =np.logical_or(leftMaskArr[...,0] > 250 ,rightMaskArr[...,0] > 250)
 
-plt.imshow(im)
+#Создание массива, который будет содержать в себе сдвоенную маску
+transparentMaskArr = leftMaskArr.copy()
+
+#Перекрашивание белых областей в красный цвет и добавление 50%-ой прозрачности
+transparentMaskArr[doubleMaskBool] = [255,0,0,127]
+
+#Перевод массива в объект изображения (требуется для склейки изображений)
+transparentMask = Image.fromarray(transparentMaskArr)
+
+#Наложение маски на изображение
+ktPic.paste(transparentMask,(0, 0),transparentMask)
+
+#Настройка и открытие окна pyplot
+plt.figure(picName)
+plt.imshow(ktPic)
 plt.show()
-
