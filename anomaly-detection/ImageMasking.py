@@ -1,14 +1,15 @@
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 
 def maskApply(picName):
-    ktPath = "NLM-MontgomeryCXRSet\\MontgomerySet\\CXR_png\\"
-    masksPath = "NLM-MontgomeryCXRSet\\MontgomerySet\\ManualMask\\"
+    ktPath = "NLM-MontgomeryCXRSet"+os.sep+"MontgomerySet"+os.sep+"CXR_png"+os.sep
+    masksPath = "NLM-MontgomeryCXRSet"+os.sep+"MontgomerySet"+os.sep+"ManualMask"+os.sep
 
     #Создание объектов изображений томографии и масок
-    leftMask = Image.open(masksPath+"leftMask\\"+picName).convert("RGBA")
-    rightMask = Image.open(masksPath+"rightMask\\"+picName).convert("RGBA")
+    leftMask = Image.open(masksPath+"leftMask"+os.sep+picName).convert("RGBA")
+    rightMask = Image.open(masksPath+"rightMask"+os.sep+picName).convert("RGBA")
     ktPic = Image.open(ktPath+picName).convert("RGB")
 
     #Перевод масок в трёхмерный массив numpy
@@ -19,7 +20,7 @@ def maskApply(picName):
     doubleMaskBool =np.logical_or(leftMaskArr[...,0] > 250 ,rightMaskArr[...,0] > 250)
 
     #Создание массива, который будет содержать в себе сдвоенную маску
-    transparentMaskArr = leftMaskArr.copy()
+    transparentMaskArr = np.zeros(leftMaskArr.shape, dtype=leftMaskArr.dtype)
 
     #Перекрашивание белых областей в красный цвет и добавление 50%-ой прозрачности
     transparentMaskArr[doubleMaskBool] = [255,0,0,127]
