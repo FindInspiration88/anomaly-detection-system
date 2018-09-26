@@ -3,6 +3,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import subprocess
+import math
 
 # Разбить исходное изображение на квадраты 100х100 пикселей
 def cutOriginalImage(picName, picWithMask=None, road='source'):
@@ -14,14 +15,13 @@ def cutOriginalImage(picName, picWithMask=None, road='source'):
     originalImage = Image.open(ktPath+picName)
     # Получить размеры исходного изображения
     (width, height) = originalImage.size
-    #
+    # Картинка 100х100 которая была до текущей (нужна для неполных картинок)
     previosImage = Image.new("RGBA", (100,100), color=(0,0,0,0))
-    #
-    littlePic = False
+
 
     #кол-во требуемых строчек и стоблцов (целочисленное)
-    numRows = round(width / imageSize)+1
-    numCols = round(height / imageSize)+1
+    numRows = math.floor(width / imageSize)+1
+    numCols = math.floor(height / imageSize)+1
 
 
     # В зависимости от того что передали сделать массив из картинки
@@ -35,16 +35,17 @@ def cutOriginalImage(picName, picWithMask=None, road='source'):
 
         for col in range(numCols):
             try:
+                littlePic = False
                 background = Image.new("RGBA", (100, 100), color = (0, 0, 0, 0))
                 top = Image.fromarray(originalImageArr[col*imageSize:(col+1)*imageSize,row*imageSize:(row+1)*imageSize,...])
                 (topWidth,topHeigth) = top.size
                 # Проверяет, если картинка оказалась неполной, использовать наложение предыдущей картинки
                 if top.size != (imageSize,imageSize):
-                    if topHeigth&topWidth != imageSize:
+                    if topHeigth != imageSize and topWidth != imageSize:
                         previosImage = Image.fromarray(originalImageArr[(col-1) * imageSize:col * imageSize,(row - 1) * imageSize:(row) * imageSize, ...])
                         background.paste(previosImage, (0, 0))
                         littlePic = True
-                    if topHeigth > topWidth | littlePic == false:
+                    if topHeigth > topWidth and littlePic == False:
                         previosImage = Image.fromarray(originalImageArr[col*imageSize:(col+1)*imageSize,(row-1)*imageSize:(row)*imageSize,...])
                         background.paste(previosImage, (0,0))
                         littlePic = False
@@ -56,6 +57,7 @@ def cutOriginalImage(picName, picWithMask=None, road='source'):
                 background.save(road+os.sep+"newImage_"+str(col+1)+"_"+str(row+1)+".png")
             except Exception:
                 pass
+                print('выход за пределы картинки в столбце '+str(row+1)+' в строчке '+str(col+1))
 
 def cutImageWithMask(picName):
     ktPath = "NLM-MontgomeryCXRSet" + os.sep + "MontgomerySet" + os.sep + "CXR_png" + os.sep
