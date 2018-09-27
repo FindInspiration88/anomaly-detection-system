@@ -4,6 +4,10 @@ import numpy as np
 import os
 
 def maskApply(picName):
+    
+    dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(dir+os.sep)
+    
     ktPath = "NLM-MontgomeryCXRSet"+os.sep+"MontgomerySet"+os.sep+"CXR_png"+os.sep
     masksPath = "NLM-MontgomeryCXRSet"+os.sep+"MontgomerySet"+os.sep+"ManualMask"+os.sep
 
@@ -31,7 +35,4 @@ def maskApply(picName):
     #Наложение маски на изображение
     ktPic.paste(transparentMask,(0, 0),transparentMask)
 
-    #Настройка и открытие окна pyplot
-    plt.figure(picName)
-    plt.imshow(ktPic)
-    plt.show()
+    return ktPic

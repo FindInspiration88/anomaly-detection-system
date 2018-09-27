@@ -1,2 +1,5 @@
 from ImageMasking import maskApply
-maskApply("MCUCXR_0001_0.png")
+from dataset import cutImage
+
+cutImage("MCUCXR_0001_0.png",'source')
+cutImage("MCUCXR_0001_0.png",'target', maskApply("MCUCXR_0001_0.png"))
