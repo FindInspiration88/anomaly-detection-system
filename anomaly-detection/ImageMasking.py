@@ -1,0 +1,38 @@
+from PIL import Image
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+
+def maskApply(picName):
+    
+    dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(dir+os.sep)
+    
+    ktPath = "NLM-MontgomeryCXRSet"+os.sep+"MontgomerySet"+os.sep+"CXR_png"+os.sep
+    masksPath = "NLM-MontgomeryCXRSet"+os.sep+"MontgomerySet"+os.sep+"ManualMask"+os.sep
+
+    #Создание объектов изображений томографии и масок
+    leftMask = Image.open(masksPath+"leftMask"+os.sep+picName).convert("RGBA")
+    rightMask = Image.open(masksPath+"rightMask"+os.sep+picName).convert("RGBA")
+    ktPic = Image.open(ktPath+picName).convert("RGB")
+
+    #Перевод масок в трёхмерный массив numpy
+    leftMaskArr = np.array(leftMask)
+    rightMaskArr = np.array(rightMask)
+
+    #Выделение белых областей масок в булиновском массиве
+    doubleMaskBool =np.logical_or(leftMaskArr[...,0] > 250 ,rightMaskArr[...,0] > 250)
+
+    #Создание массива, который будет содержать в себе сдвоенную маску
+    transparentMaskArr = np.zeros(leftMaskArr.shape, dtype=leftMaskArr.dtype)
+
+    #Перекрашивание белых областей в красный цвет и добавление 50%-ой прозрачности
+    transparentMaskArr[doubleMaskBool] = [255,0,0,127]
+
+    #Перевод массива в объект изображения (требуется для склейки изображений)
+    transparentMask = Image.fromarray(transparentMaskArr)
+
+    #Наложение маски на изображение
+    ktPic.paste(transparentMask,(0, 0),transparentMask)
+
+    return ktPic
